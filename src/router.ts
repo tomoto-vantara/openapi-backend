@@ -286,6 +286,18 @@ export class OpenAPIRouter {
           }
         }
       }
+
+      // ensure the array parameters are split to array even if they are passed in an object form
+      ((operation.parameters as OpenAPIV3.ParameterObject[]) || [])
+        // get unexploded array type parameters in query
+        .filter((p) => p.explode === false && p.in === 'query')
+        // the parameter actually exists and not yet split
+        .filter((p) => _.isString(query[p.name]))
+        .forEach((p) => {
+          // split by the delimiter specified by the style
+          const d = p.style === 'spaceDelimited' ? ' ' : p.style === 'pipeDelimited' ? '|' : ',';
+          query[p.name] = query[p.name].split(d);
+        });
     }
 
     return {
